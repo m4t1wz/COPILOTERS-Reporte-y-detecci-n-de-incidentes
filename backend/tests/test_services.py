@@ -311,6 +311,8 @@ def test_openapi_lists_exactly_the_contract_routes(client):
         ("GET", "/api/v1/admin/reports/{report_id}/history"),
         # Ampliación documentada de 02 §5 (03 §4.6): preferencia de notificaciones push.
         ("PUT", "/api/v1/users/me/notifications"),
+        # Herramienta de pruebas (03 §4.7), deshabilitada salvo ENABLE_DATA_RESET=true.
+        ("POST", "/api/v1/admin/maintenance/reset"),
     }
 
 

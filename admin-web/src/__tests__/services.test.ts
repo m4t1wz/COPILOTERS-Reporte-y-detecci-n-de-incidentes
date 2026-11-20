@@ -4,6 +4,7 @@ import { apiClient } from '../core/api-client';
 import { adminService } from '../services/admin-service';
 import { authService } from '../services/auth-service';
 import { incidentService } from '../services/incident-service';
+import { maintenanceService } from '../services/maintenance-service';
 import { cleanParams } from '../services/request';
 import { ADMIN_LOGIN, httpError, networkDown, respond } from './fixtures';
 
@@ -60,5 +61,22 @@ describe('con backend disponible', () => {
 describe('cleanParams', () => {
   it('quita parámetros vacíos', () => {
     expect(cleanParams({ a: 1, b: '', c: undefined, d: null, e: 'x' })).toEqual({ a: 1, e: 'x' });
+  });
+});
+
+describe('mantenimiento (borrado de datos de prueba)', () => {
+  it('envía el alcance y la confirmación', async () => {
+    let body: unknown;
+    apiClient.defaults.adapter = (config) => {
+      body = JSON.parse(config.data);
+      return respond({ scope: 'reportes', deleted: { reportes: 1, historial: 2, agrupaciones: 0, fotos: 0, cuentas: 0 } })(config);
+    };
+    const res = await maintenanceService.reset('reportes', 'BORRAR');
+    expect(body).toEqual({ scope: 'reportes', confirmation: 'BORRAR' });
+    expect(res.deleted.reportes).toBe(1);
+  });
+  it('deshabilitada en el servidor: 404', async () => {
+    apiClient.defaults.adapter = httpError(404);
+    await expect(maintenanceService.reset('todo', 'BORRAR')).rejects.toMatchObject({ status: 404 });
   });
 });

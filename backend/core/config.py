@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # El contacto real se configura solo en el entorno (.env / hosting), nunca en el código.
     nominatim_user_agent: str = "nexo-map-api"
 
+    # Herramienta de borrado de datos para pruebas (03 §4.7). Apagada por defecto.
+    enable_data_reset: bool = False
+
     # Rate Limiting
     rate_limit_per_minute: int = 60
     report_submit_rate_limit_per_minute: int = 5

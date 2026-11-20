@@ -5,6 +5,7 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { AdminRoute } from './components/layout/AdminRoute';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
+import { MaintenancePage } from './pages/MaintenancePage';
 import { MapViewPage } from './pages/MapViewPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ReportDetailPage } from './pages/ReportDetailPage';
@@ -22,6 +23,8 @@ export function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/reports/:id" element={<ReportDetailPage />} />
             <Route path="/map" element={<MapViewPage />} />
+            {/* Oculta: no figura en el menú (Ctrl+Shift+M). */}
+            <Route path="/mantenimiento" element={<MaintenancePage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />
