@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-base font-sans text-sm text-typography-main antialiased;
+  }
+}
+
+/* Popup de MapLibre alineado al sistema visual: superficie blanca, borde sutil, radio 8 px. */
+.nexo-popup .maplibregl-popup-content {
+  @apply rounded-card border border-border bg-surface p-3 shadow-overlay;
+  font-family: Inter, sans-serif;
+}
+.nexo-popup .maplibregl-popup-close-button {
+  @apply right-1 top-1 h-6 w-6 rounded text-[16px] text-typography-muted hover:bg-brand-soft;
+}
