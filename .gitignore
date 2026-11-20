@@ -68,3 +68,6 @@ Thumbs.db
 *.apk
 *.aab
 *firebase-adminsdk*.json
+
+# URL pública de la API para el build de producción del panel (no es secreta)
+!admin-web/.env.production
