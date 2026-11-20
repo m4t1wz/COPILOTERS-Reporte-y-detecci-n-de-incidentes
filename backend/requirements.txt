@@ -1,0 +1,21 @@
+# Dependencias del backend (docs/03. backend.md §7) con versiones fijadas.
+fastapi==0.165.0
+uvicorn[standard]==0.54.0
+pydantic==2.14.3
+pydantic-settings==2.16.3
+supabase==2.34.1
+asyncpg==0.32.0
+# DOC-PENDIENTE: SQLAlchemy, geoalchemy2 y passlib figuran en la especificación pero el código usa
+# asyncpg (03 §2.2 admite "asyncpg o SQLAlchemy 2.0") y las contraseñas las gestiona Supabase Auth.
+SQLAlchemy==2.1.9
+geoalchemy2==0.21.0
+shapely==2.2.0
+httpx==0.28.1
+python-multipart==0.0.34
+pillow==13.0.0
+python-jose[cryptography]==3.5.0
+passlib[bcrypt]==1.7.4
+slowapi==0.1.10
+cachetools==8.0.2
+pytest==9.2.0
+pytest-asyncio==1.5.0
