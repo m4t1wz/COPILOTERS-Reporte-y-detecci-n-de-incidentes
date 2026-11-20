@@ -56,7 +56,29 @@ def test_geocoding_timeout_falls_back():
     service = GeocodingService(transport=httpx.MockTransport(slow))
     start = datetime.now()
     assert asyncio.run(service.reverse_geocode(-26.1852, -58.1738)) == fallback_reference(-26.1852, -58.1738)
-    assert (datetime.now() - start).total_seconds() < 5
+    assert (datetime.now() - start).total_seconds() < 7  # tope total de 6 s (Nominatim + Photon)
+
+
+def test_geocoding_uses_photon_when_nominatim_rate_limits():
+    calls = []
+
+    def handler(request):
+        calls.append(request.url.host)
+        if request.url.host == "nominatim.openstreetmap.org":
+            return httpx.Response(429)
+        return httpx.Response(200, json={"features": [{"properties": {
+            "street": "Jose Maria Uriburu", "city": "Formosa", "state": "Formosa"}}]})
+
+    service = GeocodingService(transport=httpx.MockTransport(handler))
+
+    async def run():
+        first = await service.reverse_geocode(-26.1852, -58.1738)
+        second = await service.reverse_geocode(-26.1900, -58.1800)  # Nominatim en pausa tras el 429
+        return first, second
+
+    first, second = asyncio.run(run())
+    assert first == second == "Jose Maria Uriburu, Formosa"
+    assert calls == ["nominatim.openstreetmap.org", "photon.komoot.io", "photon.komoot.io"]
 
 
 def test_geocoding_timeouts_separate_connect_from_response():
