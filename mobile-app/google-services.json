@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "365903089695",
+    "project_id": "nexo-map-d2fa1",
+    "storage_bucket": "nexo-map-d2fa1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:365903089695:android:d2af1a9e1a6b22d0ef452a",
+        "android_client_info": {
+          "package_name": "ar.gob.formosa.incidentes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA45-fWn3WVrqEQyFmv4BMw40MOCF-7i-w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

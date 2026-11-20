@@ -1,0 +1,83 @@
+{
+  "expo": {
+    "name": "NEXO MAP",
+    "slug": "nexo-map",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "nexo-map",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#010B1D"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ar.gob.formosa.incidentes",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Necesitamos tu ubicación para posicionar el incidente en el mapa de Formosa.",
+        "NSCameraUsageDescription": "Necesitamos acceso a la cámara para tomar una fotografía de la situación reportada.",
+        "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tus imágenes para adjuntar evidencia del incidente."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#091B3B"
+      },
+      "package": "ar.gob.formosa.incidentes",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-dev-client",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Permite a la aplicación acceder a tu ubicación precisa para registrar reportes en el mapa de Formosa."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permite capturar imágenes del incidente en tiempo real.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite seleccionar fotos almacenadas en la galería."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0475EF",
+          "defaultChannel": "estado-reportes"
+        }
+      ],
+      "@maplibre/maplibre-react-native"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2bb36707-ccbf-434c-9d00-cf63fcdf4b05"
+      }
+    },
+    "owner": "m4t1_wz"
+  }
+}
