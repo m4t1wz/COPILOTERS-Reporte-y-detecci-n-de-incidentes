@@ -55,7 +55,8 @@ def format_photon_address(payload: dict) -> str | None:
     if not features:
         return None
     props = features[0].get("properties") or {}
-    road = props.get("street")
+    # Si el resultado es la propia calle, Photon pone su nombre en "name" (type = "street").
+    road = props.get("street") or (props.get("name") if props.get("type") == "street" else None)
     if road and props.get("housenumber"):
         road = f"{road} {props['housenumber']}"
     locality = props.get("city") or props.get("county") or props.get("state")
@@ -117,7 +118,9 @@ class GeocodingService:
 
     async def _from_photon(self, latitude: float, longitude: float) -> str | None:
         try:
-            payload = await self._get_json(PHOTON_URL, {"lat": latitude, "lon": longitude, "limit": 1})
+            payload = await self._get_json(
+                PHOTON_URL, {"lat": latitude, "lon": longitude, "limit": 1, "layer": ["house", "street"]}
+            )
         except (httpx.HTTPError, asyncio.TimeoutError, ValueError) as exc:
             logger.warning("Photon no disponible: %s", exc)
             return None

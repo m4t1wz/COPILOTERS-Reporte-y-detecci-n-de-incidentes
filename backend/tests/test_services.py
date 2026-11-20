@@ -81,6 +81,16 @@ def test_geocoding_uses_photon_when_nominatim_rate_limits():
     assert calls == ["nominatim.openstreetmap.org", "photon.komoot.io", "photon.komoot.io"]
 
 
+def test_photon_street_result_uses_name():
+    from services.geocoding_service import format_photon_address
+
+    payload = {"features": [{"properties": {"type": "street", "name": "Juan Somacal", "city": "Formosa"}}]}
+    assert format_photon_address(payload) == "Juan Somacal, Formosa"
+    poi = {"features": [{"properties": {"type": "house", "name": "Anchico Blanco", "street": "Jose Maria Uriburu",
+                                        "city": "Formosa"}}]}
+    assert format_photon_address(poi) == "Jose Maria Uriburu, Formosa"
+
+
 def test_geocoding_timeouts_separate_connect_from_response():
     service = GeocodingService(transport=httpx.MockTransport(lambda r: httpx.Response(200, json=NOMINATIM_PAYLOAD)))
 
