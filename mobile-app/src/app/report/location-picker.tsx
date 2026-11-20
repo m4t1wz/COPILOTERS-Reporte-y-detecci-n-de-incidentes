@@ -14,7 +14,7 @@ import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { FormosaMaskLayer } from '../../components/map/FormosaMaskLayer';
 import { MAP_CONFIG } from '../../constants/map';
 import { useAppTheme } from '../../context/ThemeContext';
-import { checkIsInsideFormosaBounds } from '../../hooks/useLocation';
+import { isInsideFormosa } from '../../hooks/useLocation';
 
 const PIN_SIZE = 42;
 const MARKER_DOT_SIZE = 6;
@@ -35,7 +35,7 @@ export default function LocationPickerModal() {
   const initialLon = params.lon ? parseFloat(params.lon) : -58.1738;
 
   const [currentCoords, setCurrentCoords] = useState<[number, number]>([initialLon, initialLat]);
-  const [isInside, setIsInside] = useState<boolean>(() => checkIsInsideFormosaBounds(initialLat, initialLon));
+  const [isInside, setIsInside] = useState<boolean>(() => isInsideFormosa(initialLat, initialLon));
   const cameraRef = useRef<any>(null);
 
   const hasNativeMap = Boolean(MapLibreGL?.MapView && Platform.OS !== 'web');
@@ -45,7 +45,7 @@ export default function LocationPickerModal() {
     if (coords && coords.length >= 2) {
       const [lon, lat] = coords;
       setCurrentCoords([lon, lat]);
-      setIsInside(checkIsInsideFormosaBounds(lat, lon));
+      setIsInside(isInsideFormosa(lat, lon));
     }
   };
 

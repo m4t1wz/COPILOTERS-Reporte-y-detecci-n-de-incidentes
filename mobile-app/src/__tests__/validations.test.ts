@@ -1,4 +1,4 @@
-import { checkIsInsideFormosaBounds } from '../utils/geo';
+import { isInsideFormosa } from '../utils/geo';
 import { INCIDENT_CATEGORIES, REPORT_STATUSES } from '../constants/categories';
 
 describe('Reglas de Validación de Negocio de Reportes', () => {
@@ -44,34 +44,47 @@ describe('Reglas de Validación de Negocio de Reportes', () => {
     });
   });
 
-  describe('Filtro de Coordenadas Geográficas (BBOX de Formosa)', () => {
+  describe('Validación territorial con el polígono real de Formosa', () => {
     it('debe aceptar coordenadas reales dentro de Formosa Capital', () => {
-      expect(checkIsInsideFormosaBounds(-26.1852, -58.1738)).toBe(true);
+      expect(isInsideFormosa(-26.1852, -58.1738)).toBe(true);
     });
 
     it('debe aceptar coordenadas reales en Clorinda', () => {
-      expect(checkIsInsideFormosaBounds(-25.2850, -57.7180)).toBe(true);
+      expect(isInsideFormosa(-25.2850, -57.7180)).toBe(true);
     });
 
     it('debe aceptar coordenadas reales en Las Lomitas', () => {
-      expect(checkIsInsideFormosaBounds(-24.7000, -60.5900)).toBe(true);
+      expect(isInsideFormosa(-24.7000, -60.5900)).toBe(true);
     });
 
     it('debe aceptar coordenadas reales en Ingeniero Juárez', () => {
-      expect(checkIsInsideFormosaBounds(-23.9000, -61.8500)).toBe(true);
+      expect(isInsideFormosa(-23.9000, -61.8500)).toBe(true);
     });
 
     it('debe rechazar coordenadas fuera del BBOX provincial (ej. Caaguazú / fuera de longitud este)', () => {
       // Coordenada documentada en docs/01. architecture.md (Sec. 7) y docs/02. system-contracts.md (Sec. 1.4)
-      expect(checkIsInsideFormosaBounds(-25.2987, -56.8921)).toBe(false);
+      expect(isInsideFormosa(-25.2987, -56.8921)).toBe(false);
     });
 
     it('debe rechazar coordenadas fuera de Formosa (Resistencia, Chaco)', () => {
-      expect(checkIsInsideFormosaBounds(-27.4514, -58.9866)).toBe(false);
+      expect(isInsideFormosa(-27.4514, -58.9866)).toBe(false);
     });
 
     it('debe rechazar coordenadas fuera de Formosa (Buenos Aires)', () => {
-      expect(checkIsInsideFormosaBounds(-34.6037, -58.3816)).toBe(false);
+      expect(isInsideFormosa(-34.6037, -58.3816)).toBe(false);
+    });
+
+    // Puntos dentro del rectángulo envolvente pero fuera de la provincia: antes se aceptaban.
+    it('debe rechazar Chaco aunque esté dentro del rectángulo envolvente', () => {
+      expect(isInsideFormosa(-26.7, -59.0)).toBe(false);
+    });
+
+    it('debe rechazar Paraguay cruzando el río frente a Formosa Capital', () => {
+      expect(isInsideFormosa(-26.17, -58.05)).toBe(false);
+    });
+
+    it('debe rechazar valores no numéricos', () => {
+      expect(isInsideFormosa(NaN, -58.17)).toBe(false);
     });
   });
 

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import * as Location from 'expo-location';
-import { checkIsInsideFormosaBounds } from '../utils/geo';
+import { isInsideFormosa } from '../utils/geo';
 import { coordinatesFallback, formatGeocodedAddress } from '../utils/address-formatter';
 
-export { checkIsInsideFormosaBounds };
+export { isInsideFormosa };
 
 export interface LocationState {
   latitude: number;
@@ -62,7 +62,7 @@ export const useLocation = () => {
 
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
-      const inside = checkIsInsideFormosaBounds(lat, lon);
+      const inside = isInsideFormosa(lat, lon);
       const address = await reverseGeocode(lat, lon);
       if (!isCurrent()) return;
 
@@ -95,7 +95,7 @@ export const useLocation = () => {
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
       const requestId = ++requestIdRef.current;
-      const inside = checkIsInsideFormosaBounds(lat, lon);
+      const inside = isInsideFormosa(lat, lon);
       const errorMessage = inside
         ? null
         : 'La ubicación seleccionada está fuera de los límites de la provincia de Formosa.';
