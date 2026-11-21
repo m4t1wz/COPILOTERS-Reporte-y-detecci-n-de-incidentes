@@ -5,6 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 
 from core.exceptions import InvalidInputException, ReportNotFoundException
+from core.security import get_optional_admin
+from schemas.auth import UserProfile
 from schemas.cluster import ClusterFeatureCollection
 from schemas.common import ErrorResponse, IncidentCategory, ReportStatus
 from schemas.incident import IncidentDetail, IncidentFeatureCollection
@@ -43,9 +45,17 @@ async def list_incidents(
     start_date: datetime | None = Query(None),
     end_date: datetime | None = Query(None),
     repo: ReportRepository = Depends(get_report_repository),
+    admin: UserProfile | None = Depends(get_optional_admin),
 ) -> IncidentFeatureCollection:
-    # DOC-PENDIENTE: no se define si el filtro status admite 'descartado'/'resuelto'; se acepta todo el enum.
-    statuses = [status.value] if status else list(report_service.ACTIVE_STATUSES)
+    # Público: solo incidentes verificados por un operador (verificado, en_seguimiento).
+    # Administrador autenticado: estados activos por defecto y cualquier estado con el filtro `status`.
+    if admin is not None:
+        statuses = [status.value] if status else list(report_service.ACTIVE_STATUSES)
+    else:
+        allowed = report_service.PUBLIC_STATUSES
+        statuses = ([status.value] if status.value in allowed else []) if status else list(allowed)
+    if not statuses:
+        return report_service.build_incident_collection([])
     filters = IncidentFilters(
         statuses=statuses,
         category=category.value if category else None,
@@ -73,9 +83,11 @@ async def list_clusters(
 async def get_incident(
     incident_id: UUID,
     repo: ReportRepository = Depends(get_report_repository),
+    admin: UserProfile | None = Depends(get_optional_admin),
 ) -> IncidentDetail:
     row = await repo.get_report(incident_id)
-    # DOC-PENDIENTE: no se define la ficha pública de un reporte descartado; se oculta (alineado a RLS 06 §6).
-    if row is None or row["current_status"] == "descartado":
+    # La ficha pública solo existe para incidentes verificados; el panel (administrador) ve cualquier reporte.
+    visible = admin is not None or (row is not None and row["current_status"] in report_service.PUBLIC_STATUSES)
+    if row is None or not visible:
         raise ReportNotFoundException(details={"report_id": str(incident_id)})
     return report_service.build_incident_detail(row)

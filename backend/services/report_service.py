@@ -54,8 +54,11 @@ ALLOWED_TRANSITIONS: dict[str, set[str]] = {
 
 COMMENT_REQUIRED_STATUSES = {"en_revision", "en_seguimiento", "descartado"}
 
-# Estados activos por defecto del mapa público (02 §4).
+# Estados activos: mapa del panel administrativo (02 §4).
 ACTIVE_STATUSES = ["pendiente", "en_revision", "verificado", "en_seguimiento"]
+
+# Mapa público y fichas públicas (app ciudadana): solo incidentes cuya existencia verificó un operador.
+PUBLIC_STATUSES = ["verificado", "en_seguimiento"]
 
 # Textos del timeline (02 §5; PROJECT_CONTEXT §1.D y §2).
 # DOC-PENDIENTE: solo "pendiente" y "en_revision" tienen título/descripción literal en el contrato; el resto

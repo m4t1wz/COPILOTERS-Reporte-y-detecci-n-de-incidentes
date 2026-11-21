@@ -87,6 +87,20 @@ async def require_admin(current_user: UserProfile = Depends(get_current_user)) -
     return current_user
 
 
+async def get_optional_admin(
+    token: str | None = Depends(oauth2_scheme),
+    repo: ReportRepository = Depends(get_report_repository),
+) -> UserProfile | None:
+    """Administrador autenticado o None. Nunca rechaza: las rutas públicas siguen siendo públicas."""
+    if not token:
+        return None
+    try:
+        user = await get_current_user(token, repo)
+    except Exception:  # noqa: BLE001 — token ausente, inválido o vencido: se trata como público
+        return None
+    return user if user.role == "admin" else None
+
+
 # --- Rate limiting (SlowAPI) ---
 def user_or_ip_key(request: Request) -> str:
     """Clave por ID de usuario autenticado; si no hay token válido, por IP del cliente."""

@@ -20,6 +20,7 @@ def _create(client, ctx, **kwargs):
 
 def test_incidents_are_public_geojson(client, ctx):
     rid = _create(client, ctx, lat=-26.18523456, lon=-58.17381234, photo=make_image())
+    _set_status(ctx, rid, "verificado")
     response = client.get("/api/v1/incidents")
     assert response.status_code == 200
     body = response.json()
@@ -37,28 +38,49 @@ def test_incidents_are_public_geojson(client, ctx):
     assert props["category"] == "calle_anegada"
     assert props["category_label"] == "Calle anegada"
     assert props["color"] == "#2196F3"
-    assert props["status"] == "pendiente"
-    assert props["status_label"] == "Pendiente"
+    assert props["status"] == "verificado"
+    assert props["status_label"] == "Verificado"
     assert props["address_reference"] == FIXED_ADDRESS
     assert props["has_photo"] is True
     assert props["photo_url"].startswith("https://")
 
 
 def test_incidents_never_expose_citizen_identity(client, ctx):
-    _create(client, ctx)
+    _set_status(ctx, _create(client, ctx), "verificado")
     text = client.get("/api/v1/incidents").text
     assert str(ctx.citizen["id"]) not in text
     assert ctx.citizen["full_name"] not in text
     assert ctx.citizen["phone_number"] not in text
 
 
-def test_default_status_filter_returns_only_active(client, ctx):
-    ids = {s: _create(client, ctx) for s in ["pendiente", "en_revision", "verificado", "en_seguimiento"]}
-    for status, rid in ids.items():
-        _set_status(ctx, rid, status)
-    _set_status(ctx, _create(client, ctx), "resuelto")
+def _all_statuses(client, ctx):
+    for status in ["pendiente", "en_revision", "verificado", "en_seguimiento", "resuelto"]:
+        _set_status(ctx, _create(client, ctx), status)
+
+
+def test_public_default_returns_only_verified(client, ctx):
+    _all_statuses(client, ctx)
     statuses = {f["properties"]["status"] for f in client.get("/api/v1/incidents").json()["features"]}
+    assert statuses == {"verificado", "en_seguimiento"}
+
+
+@pytest.mark.parametrize("status", ["pendiente", "en_revision", "resuelto"])
+def test_public_cannot_request_unverified_status(client, ctx, status):
+    _all_statuses(client, ctx)
+    assert client.get(f"/api/v1/incidents?status={status}").json()["features"] == []
+
+
+def test_admin_default_returns_all_active(client, ctx):
+    _all_statuses(client, ctx)
+    response = client.get("/api/v1/incidents", headers=auth_header(ctx.admin["id"]))
+    statuses = {f["properties"]["status"] for f in response.json()["features"]}
     assert statuses == {"pendiente", "en_revision", "verificado", "en_seguimiento"}
+
+
+def test_citizen_token_does_not_unlock_unverified(client, ctx):
+    _all_statuses(client, ctx)
+    response = client.get("/api/v1/incidents", headers=auth_header(ctx.citizen["id"]))
+    assert {f["properties"]["status"] for f in response.json()["features"]} == {"verificado", "en_seguimiento"}
 
 
 def test_descartado_is_excluded_by_default(client, ctx):
@@ -77,8 +99,9 @@ def test_status_filter(client, ctx):
 
 
 def test_category_filter(client, ctx):
-    _create(client, ctx)
+    _set_status(ctx, _create(client, ctx), "verificado")
     tree = _create(client, ctx, category="arbol_caido")
+    _set_status(ctx, tree, "verificado")
     features = client.get("/api/v1/incidents?category=arbol_caido").json()["features"]
     assert [f["id"] for f in features] == [str(tree)]
     assert features[0]["properties"]["color"] == "#558B2F"
@@ -87,6 +110,8 @@ def test_category_filter(client, ctx):
 def test_bbox_filter(client, ctx):
     capital = _create(client, ctx)
     clorinda = _create(client, ctx, lat=-25.2870, lon=-57.7230)
+    _set_status(ctx, capital, "verificado")
+    _set_status(ctx, clorinda, "verificado")
     features = client.get("/api/v1/incidents?bbox=-58.3,-26.3,-58.0,-26.0").json()["features"]
     assert [f["id"] for f in features] == [str(capital)]
     features = client.get("/api/v1/incidents?bbox=-57.8,-25.4,-57.6,-25.2").json()["features"]
@@ -101,6 +126,8 @@ def test_invalid_bbox_returns_400(client, bbox):
 def test_date_filters(client, ctx):
     first = _create(client, ctx)
     second = _create(client, ctx)
+    _set_status(ctx, first, "verificado")
+    _set_status(ctx, second, "verificado")
     t1 = ctx.repo.reports[first]["created_at"]
     t2 = ctx.repo.reports[second]["created_at"]
     start = iso_utc(t2 - timedelta(milliseconds=1))
@@ -116,6 +143,7 @@ def test_invalid_enum_or_date_returns_400(client, query):
 
 def test_incident_detail(client, ctx):
     rid = _create(client, ctx, lat=-26.18523456, lon=-58.17381234)
+    _set_status(ctx, rid, "verificado")
     response = client.get(f"/api/v1/incidents/{rid}")
     assert response.status_code == 200
     body = response.json()
@@ -132,6 +160,13 @@ def test_incident_detail_not_found(client, ctx):
     rid = _create(client, ctx)
     _set_status(ctx, rid, "descartado")
     assert_error(client.get(f"/api/v1/incidents/{rid}"), 404, "REPORT_NOT_FOUND")
+
+
+def test_unverified_detail_is_hidden_from_public_but_not_admin(client, ctx):
+    rid = _create(client, ctx)
+    assert_error(client.get(f"/api/v1/incidents/{rid}"), 404, "REPORT_NOT_FOUND")
+    admin = client.get(f"/api/v1/incidents/{rid}", headers=auth_header(ctx.admin["id"]))
+    assert admin.status_code == 200 and admin.json()["status"] == "pendiente"
 
 
 def test_clusters_empty(client):

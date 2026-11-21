@@ -103,8 +103,8 @@ def test_end_to_end_citizen_admin_flow(client, ctx):
     card = created.json()["confirmation"]
     assert card["report_number"] == "#00001" and card["status"] == "pendiente"
     report_id = card["report_id"]
-    # El reporte es consultable en el mapa público y en «Mis reportes».
-    assert client.get(f"/api/v1/incidents/{report_id}").json()["status"] == "pendiente"
+    # Pendiente: no figura en el mapa público hasta que el admin lo verifique, pero sí en «Mis reportes».
+    assert client.get(f"/api/v1/incidents/{report_id}").status_code == 404
     assert client.get("/api/v1/reports/me", headers=citizen).json()["items"][0]["id"] == report_id
     # 4. El administrador lo ve en el panel.
     admin = auth_header(ctx.admin["id"])
@@ -116,6 +116,8 @@ def test_end_to_end_citizen_admin_flow(client, ctx):
     assert r1.status_code == 200 and r1.json()["current_status"] == "en_revision"
     r2 = client.patch(f"/api/v1/admin/reports/{report_id}/status", json={"new_status": "verificado"}, headers=admin)
     assert r2.status_code == 200 and r2.json()["previous_status"] == "en_revision"
+    # Ya verificado, aparece en el mapa público.
+    assert client.get(f"/api/v1/incidents/{report_id}").json()["status"] == "verificado"
     # El cambio queda en el historial con el operador responsable.
     history = client.get(f"/api/v1/admin/reports/{report_id}/history", headers=admin).json()["history"]
     assert [h["new_status"] for h in history] == ["pendiente", "en_revision", "verificado"]
